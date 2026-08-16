@@ -24,3 +24,11 @@ jobs:
       - name: Ejecutar Despertador & Tests Radiómicos
         run: |
           python wake_services.py
+
+      - name: Guardar Historial y Actualizar Estado
+        run: |
+          git config --global user.name "Angelus AGI (Sentinel)"
+          git config --global user.email "rafaelperez@conicet.gov.ar"
+          git add history.json index.html || true
+          git commit -m "auto: Actualizar historial y estado de centinela [skip ci]" || true
+          git push || true
