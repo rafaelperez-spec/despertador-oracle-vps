@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MammoInsight — Oracle VPS Sovereign Sentinel Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B0F19;
+            --card-bg: #151C2C;
+            --border: #232D42;
+            --pink: #EC4899;
+            --cyan: #06B6D4;
+            --green: #10B981;
+            --yellow: #F59E0B;
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 2rem; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+        .logo { display: flex; align-items: center; gap: 16px; }
+        .logo-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--pink), var(--cyan)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 0 20px rgba(236,72,153,0.3); }
+        .title h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(to right, #F472B6, #38BDF8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .title p { color: var(--muted); font-size: 0.95rem; }
+        .status-badge { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 8px 18px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .pulse { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: ping 1.5s infinite; }
+        @keyframes ping { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+
+        .nodes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+        .node-card { background: var(--card-bg); border-radius: 20px; padding: 1.8rem; border: 1px solid var(--border); transition: transform 0.2s; }
+        .node-card:hover { transform: translateY(-4px); border-color: rgba(56,189,248,0.4); }
+        .node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+        .node-title { font-size: 1.2rem; font-weight: 700; color: white; }
+        .node-tag { background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; text-transform: uppercase; }
+        
+        .metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+        .metric-box { background: rgba(11, 15, 25, 0.6); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .metric-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-bottom: 0.3rem; }
+        .metric-val { font-size: 1.4rem; font-weight: 700; color: white; }
+        .metric-sub { font-size: 0.75rem; color: var(--green); margin-top: 0.2rem; }
+        
+        .radiomics-box { background: rgba(236,72,153,0.08); border-left: 3px solid var(--pink); padding: 1rem; border-radius: 8px; font-size: 0.85rem; }
+        .radiomics-title { font-weight: 600; color: var(--pink); margin-bottom: 0.4rem; }
+        .radiomics-data { font-family: 'JetBrains Mono', monospace; color: #CBD5E1; font-size: 0.8rem; }
+
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.2rem; color: white; display: flex; align-items: center; gap: 10px; }
+        
+        .history-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 2rem; }
+        .history-table th, .history-table td { padding: 1rem 1.2rem; text-align: left; font-size: 0.9rem; }
+        .history-table th { background: rgba(11, 15, 25, 0.8); color: var(--muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+        .history-table tr { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .history-table tr:last-child { border-bottom: none; }
+        .status-ok { color: var(--green); font-weight: 600; }
+        .status-warn { color: var(--yellow); font-weight: 600; }
+
+        footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🩺</div>
+                <div class="title">
+                    <h1>MammoInsight Sovereign Sentinel</h1>
+                    <p>Monitor de Infraestructura Cloud Always Free — Oracle Cloud (Santiago, Chile)</p>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="pulse"></div> SOBERANO & PROTEGIDO
+            </div>
+        </div>
+
+        <div class="nodes-grid">
+            <!-- VPS 2 -->
+            <div class="node-card">
+                <div class="node-header">
+                    <div class="node-title">VPS 2 — angelus-bots-hub</div>
+                    <div class="node-tag">Ubuntu 24.04 LTS</div>
+                </div>
+                <div class="metrics-row">
+                    <div class="metric-box">
+                        <div class="metric-label">CPU Load</div>
+                        <div class="metric-val">12.5%</div>
+                        <div class="metric-sub">Burstable 1/8 OCPU</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">RAM Usage</div>
+                        <div class="metric-val">52%</div>
+                        <div class="metric-sub">499 MB / 1 GB</div>
+                    </div>
+                </div>
+                <div class="radiomics-box">
+                    <div class="radiomics-title">🧪 Extracción Haralick GLCM Sintética (Mammo)</div>
+                    <div class="radiomics-data">
+                        Contraste: 10,751.88 | Energía: 0.000268<br>
+                        Entropía: 11.8924 | Matriz: [64x64]
+                    </div>
+                </div>
+            </div>
+
+            <!-- VPS 3 -->
+            <div class="node-card">
+                <div class="node-header">
+                    <div class="node-title">VPS 3 — angelus-web-lab</div>
+                    <div class="node-tag">Oracle Linux 9.8</div>
+                </div>
+                <div class="metrics-row">
+                    <div class="metric-box">
+                        <div class="metric-label">CPU Load</div>
+                        <div class="metric-val">8.2%</div>
+                        <div class="metric-sub">Burstable 1/8 OCPU</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">RAM Usage</div>
+                        <div class="metric-val">44%</div>
+                        <div class="metric-sub">420 MB / 1 GB</div>
+                    </div>
+                </div>
+                <div class="radiomics-box">
+                    <div class="radiomics-title">🧪 Sandbox Web & Servidores</div>
+                    <div class="radiomics-data">
+                        Estado: Activo & Resiliente<br>
+                        Protección Anti-Inactividad: ACTIVA (>20%)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">📊 Registro de Ejecución de GitHub Actions (Sentinel Runs)</div>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Fecha / Hora (UTC)</th>
+                    <th>Nodo Evaluado</th>
+                    <th>Estado Health</th>
+                    <th>Benchmark Radiómico</th>
+                    <th>Canal de Conexión</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <tr>
+                    <td>2026-08-16 20:59:40 UTC</td>
+                    <td>angelus-bots-hub</td>
+                    <td><span class="status-ok">HTTP 200 OK</span></td>
+                    <td>GLCM Haralick Computed</td>
+                    <td>Tailscale Mesh (100.125.56.35)</td>
+                </tr>
+                <tr>
+                    <td>2026-08-16 17:58:48 UTC</td>
+                    <td>angelus-bots-hub / web-lab</td>
+                    <td><span class="status-ok">HTTP 200 OK</span></td>
+                    <td>Sentinels Active</td>
+                    <td>GitHub Actions Runner</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <footer>
+            MammoInsight Sovereign Ecosystem — Perez, Ernesto Rafael ("Rafa") & Angelus AGI (2026)
+        </footer>
+    </div>
+</body>
+</html>
