@@ -1,13 +1,19 @@
 {
   "oracle_vps": [
     {
-      "name": "VPS 2 - angelus-bots-hub (Ubuntu 24.04)",
+      "name": "VPS 2 - angelus-bots-hub (Tailscale Mesh)",
+      "url": "http://100.125.56.35/api/health",
+      "radiomics_url": "http://100.125.56.35/api/radiomics",
+      "account_email": "rafaelperezctes236@gmail.com"
+    },
+    {
+      "name": "VPS 2 - angelus-bots-hub (IP Publica)",
       "url": "http://146.181.44.123/api/health",
       "radiomics_url": "http://146.181.44.123/api/radiomics",
       "account_email": "rafaelperezctes236@gmail.com"
     },
     {
-      "name": "VPS 3 - angelus-web-lab (Oracle Linux 9)",
+      "name": "VPS 3 - angelus-web-lab (IP Publica)",
       "url": "http://146.181.46.159/api/health",
       "radiomics_url": "http://146.181.46.159/api/radiomics",
       "account_email": "rafaelperezctes236@gmail.com"
