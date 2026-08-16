@@ -1,0 +1,26 @@
+name: ⏰ Despertador & Keep-Alive Oracle VPS (Angelus)
+
+on:
+  schedule:
+    # Corre automáticamente cada 6 horas (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wake-oracle-vps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Ejecutar Despertador & Tests Radiómicos
+        run: |
+          python wake_services.py
