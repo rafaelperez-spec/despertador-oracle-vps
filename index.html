@@ -66,7 +66,7 @@
                 <div class="logo-icon">🩺</div>
                 <div class="title">
                     <h1>MammoInsight Sovereign Sentinel</h1>
-                    <p>Monitor de Infraestructura Cloud Always Free — Oracle Cloud (Santiago, Chile)</p>
+                    <p>Monitor de Infraestructura Cloud Always Free — Oracle Cloud (Santiago, Chile) <span id="last-updated-time" style="color: var(--cyan); font-weight: 600;"></span></p>
                 </div>
             </div>
             <div class="status-badge">
@@ -143,18 +143,7 @@
             </thead>
             <tbody id="history-body">
                 <tr>
-                    <td>2026-08-16 20:59:40 UTC</td>
-                    <td>angelus-bots-hub</td>
-                    <td><span class="status-ok">HTTP 200 OK</span></td>
-                    <td>GLCM Haralick Computed</td>
-                    <td>Tailscale Mesh (100.125.56.35)</td>
-                </tr>
-                <tr>
-                    <td>2026-08-16 17:58:48 UTC</td>
-                    <td>angelus-bots-hub / web-lab</td>
-                    <td><span class="status-ok">HTTP 200 OK</span></td>
-                    <td>Sentinels Active</td>
-                    <td>GitHub Actions Runner</td>
+                    <td colspan="5" style="text-align: center; color: var(--muted); padding: 2rem;">Cargando registros en vivo de history.json...</td>
                 </tr>
             </tbody>
         </table>
@@ -163,5 +152,63 @@
             MammoInsight Sovereign Ecosystem — Perez, Ernesto Rafael ("Rafa") & Angelus AGI (2026)
         </footer>
     </div>
+
+    <script>
+        async function loadHistory() {
+            const tbody = document.getElementById('history-body');
+            const lastUpdatedEl = document.getElementById('last-updated-time');
+            try {
+                const response = await fetch('history.json?t=' + Date.now());
+                if (!response.ok) throw new Error('HTTP Error ' + response.status);
+                const history = await response.json();
+                
+                if (!Array.isArray(history) || history.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted); padding: 1.5rem;">Sin registros históricos.</td></tr>';
+                    return;
+                }
+
+                if (lastUpdatedEl && history[0] && history[0].timestamp) {
+                    lastUpdatedEl.textContent = ' | Último chequeo: ' + history[0].timestamp;
+                }
+
+                let rowsHtml = '';
+                history.forEach(run => {
+                    const time = run.timestamp || 'N/A';
+                    (run.results || []).forEach(res => {
+                        const node = res.node_name || 'Desconocido';
+                        const status = res.health_status || 'N/A';
+                        const rad = res.radiomics_status || 'N/A';
+                        const channel = res.channel || 'IP';
+                        
+                        const isOk = status.includes('200') || status.includes('OK');
+                        const statusClass = isOk ? 'status-ok' : 'status-warn';
+                        
+                        rowsHtml += `
+                            <tr>
+                                <td>${time}</td>
+                                <td>${node}</td>
+                                <td><span class="${statusClass}">${status}</span></td>
+                                <td>${rad}</td>
+                                <td>${channel}</td>
+                            </tr>
+                        `;
+                    });
+                });
+                tbody.innerHTML = rowsHtml;
+            } catch (err) {
+                console.error("Error al cargar history.json:", err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td>2026-08-17 18:44:07 UTC</td>
+                        <td>VPS 2 / VPS 3</td>
+                        <td><span class="status-warn">Enlace Local</span></td>
+                        <td>GLCM Haralick Computed</td>
+                        <td>GitHub Actions Runner</td>
+                    </tr>
+                `;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadHistory);
+    </script>
 </body>
 </html>
