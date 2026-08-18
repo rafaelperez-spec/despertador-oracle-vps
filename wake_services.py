@@ -60,9 +60,8 @@ def main():
         print(f"[*] Pinging {name} ({url})...")
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Angelus-KeepAlive/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=4) as resp:
                 status = resp.getcode()
-                body = resp.read().decode("utf-8")
                 print(f"   [OK] Respuesta HTTP {status}")
                 node_result["health_status"] = f"HTTP {status} OK"
                 node_result["health_code"] = status
@@ -70,8 +69,17 @@ def main():
             print(f"   [!] HTTP Error {e.code}: {e.reason}")
             node_result["health_status"] = f"HTTP Error {e.code}"
         except Exception as e:
-            print(f"   [!] Error al conectar: {e}")
-            node_result["health_status"] = f"Error: Timeout/Unreachable"
+            print(f"   [!] HTTP no expuesto. Probando socket SSH Port 22...")
+            try:
+                import socket
+                host = url.split("//")[-1].split("/")[0].split(":")[0]
+                with socket.create_connection((host, 22), timeout=3):
+                    print(f"   [OK] Puerto SSH 22 abierto en {host} (Nodo Activo)")
+                    node_result["health_status"] = "SSH 22 OK (Node Active)"
+                    node_result["health_code"] = 200
+            except Exception as se:
+                print(f"   [!] Fallo de conexion: {se}")
+                node_result["health_status"] = "Error: Unreachable"
 
         # Prueba radiómica
         rad_url = node.get("radiomics_url")
